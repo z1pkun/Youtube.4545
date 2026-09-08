@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="シンプルなYouTubeダウンローダーUI">
+  <title>ClipDown - YouTube Downloader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+    :root { --ink:#17211f; --muted:#71807c; --line:#dfe8e4; --paper:#f7faf8; --white:#fff; --mint:#b8e4d3; --mint-strong:#65bea1; --mint-dark:#247b68; --coral:#f18470; --shadow:0 22px 60px rgba(36,71,61,.12); }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; color:var(--ink); background:var(--paper); font-family:'Noto Sans JP',sans-serif; }
+    body::before { position:fixed; z-index:-1; inset:0; background:radial-gradient(circle at 14% 12%,rgba(184,228,211,.45),transparent 27%),radial-gradient(circle at 90% 86%,rgba(241,132,112,.15),transparent 22%); content:''; }
+    button,input,select { font:inherit; } button { cursor:pointer; }
+    .app-shell { display:flex; flex-direction:column; width:min(100% - 40px,1120px); min-height:100vh; margin:0 auto; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; height:86px; }
+    .brand { display:inline-flex; align-items:center; gap:10px; color:var(--ink); font:700 20px 'DM Sans',sans-serif; text-decoration:none; }
+    .brand-mark { display:grid; width:31px; height:31px; place-items:center; border-radius:10px; color:var(--white); background:var(--ink); font-size:20px; }
+    .status-pill { display:inline-flex; align-items:center; gap:8px; padding:8px 13px; border:1px solid var(--line); border-radius:99px; color:var(--muted); background:#ffffff8c; font-size:12px; }
+    .status-dot { width:7px; height:7px; border-radius:50%; background:var(--mint-strong); }
+    .hero { width:min(100%,760px); margin:auto; padding:68px 0 52px; }
+    .eyebrow { margin:0 0 18px; color:var(--mint-dark); font:700 12px 'DM Sans',sans-serif; letter-spacing:2px; }
+    h1 { margin:0; font:700 clamp(42px,7vw,72px)/1.1 'DM Sans','Noto Sans JP',sans-serif; letter-spacing:-2.8px; } h1 em { color:var(--coral); font-style:normal; }
+    .hero-copy { margin:22px 0 42px; color:var(--muted); font-size:15px; }
+    .download-form { padding:8px; border:1px solid #dfe8e4cc; border-radius:18px; background:#ffffffc2; box-shadow:var(--shadow); }
+    .url-input-wrap { display:flex; align-items:center; gap:12px; padding:0 16px; border:1px solid var(--line); border-radius:12px; background:var(--white); }
+    .link-icon { color:var(--mint-dark); font:24px 'DM Sans',sans-serif; transform:rotate(-45deg); } input,select { border:0; outline:0; color:var(--ink); background:transparent; }
+    input { width:100%; height:54px; font-size:15px; } input::placeholder { color:#9baaa5; }
+    .clear-button { width:28px; height:28px; border:0; border-radius:50%; color:var(--muted); background:#eef3f0; font-size:18px; }
+    .input-message { min-height:18px; margin:6px 14px 0; color:#cf5d4c; font-size:12px; }
+    .options-row { display:grid; grid-template-columns:1fr 1fr 1.5fr; gap:10px; margin-top:8px; }
+    .select-field { display:flex; align-items:center; justify-content:space-between; min-width:0; padding:0 14px; border:1px solid var(--line); border-radius:12px; color:var(--muted); font-size:12px; }
+    .select-field select { width:112px; height:52px; color:var(--ink); font-size:13px; cursor:pointer; }
+    .download-button { display:flex; align-items:center; justify-content:space-between; height:54px; padding:0 18px 0 20px; border:0; border-radius:12px; color:var(--white); background:var(--ink); font-size:14px; font-weight:700; transition:.2s; }
+    .download-button:hover { background:var(--mint-dark); transform:translateY(-2px); } .button-arrow { font:23px 'DM Sans',sans-serif; }
+    .preview { display:grid; grid-template-columns:128px 1fr auto; align-items:center; gap:17px; margin-top:18px; padding:12px; border:1px solid var(--line); border-radius:16px; background:var(--white); animation:rise .3s ease-out; }
+    .thumbnail-wrap { position:relative; width:128px; height:76px; overflow:hidden; border-radius:9px; background:#dcebe4; } .thumbnail-wrap img { width:100%; height:100%; object-fit:cover; }
+    .play-badge { position:absolute; top:50%; left:50%; display:grid; width:30px; height:30px; place-items:center; border-radius:50%; color:var(--white); background:#17211fc7; font-size:11px; transform:translate(-50%,-50%); }
+    .details-label { color:var(--mint-dark); font:700 10px 'DM Sans',sans-serif; letter-spacing:1.3px; } .video-details h2 { overflow:hidden; margin:5px 0 3px; font-size:14px; font-weight:500; text-overflow:ellipsis; white-space:nowrap; } .video-details p { margin:0; color:var(--muted); font:12px 'DM Sans',sans-serif; }
+    .remove-button { align-self:start; width:28px; height:28px; border:0; border-radius:50%; color:var(--muted); background:transparent; font-size:20px; }
+    .player { margin-top:18px; padding:14px; border:1px solid var(--line); border-radius:16px; background:var(--ink); animation:rise .3s ease-out; } .player-heading { display:flex; justify-content:space-between; margin:0 2px 10px; color:#b7c9c2; font-size:11px; } .player-heading .details-label { color:var(--mint); } .player video { display:block; width:100%; max-height:420px; border-radius:10px; background:#0c1110; }
+    .notice { display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:14px 16px; border:1px solid #f1d5cf; border-radius:12px; color:#88554c; background:#fff8f6; font-size:12px; animation:rise .3s ease-out; } .notice p { margin:0; line-height:1.7; } .notice-icon { display:grid; flex:0 0 18px; width:18px; height:18px; place-items:center; border-radius:50%; color:var(--white); background:var(--coral); font-weight:700; }
+    .footer { display:flex; justify-content:space-between; padding:24px 0 27px; color:#9baaa5; font-size:11px; } .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; } [hidden] { display:none!important; }
+    @keyframes rise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+    @media (max-width:600px) { .app-shell { width:min(100% - 28px,520px); } .topbar { height:72px; } .hero { padding:54px 0 28px; } .options-row { grid-template-columns:1fr 1fr; } .download-button { grid-column:1/-1; } .preview { grid-template-columns:104px 1fr auto; gap:12px; } .thumbnail-wrap { width:104px; height:65px; } .footer { gap:12px; line-height:1.5; } }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="ClipDown ホーム">
+        <span class="brand-mark" aria-hidden="true">↓</span>
+        <span>ClipDown</span>
+      </a>
+      <span class="status-pill"><span class="status-dot"></span>かんたん変換</span>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">VIDEO DOWNLOADER</p>
+      <h1 id="page-title">好きな動画を、<br><em>すぐに保存。</em></h1>
+      <p class="hero-copy">YouTubeのURLを貼り付けて、保存形式を選ぶだけ。</p>
+
+      <form class="download-form" id="downloadForm" novalidate>
+        <label class="sr-only" for="videoUrl">YouTube動画URL</label>
+        <div class="url-input-wrap">
+          <span class="link-icon" aria-hidden="true">↗</span>
+          <input id="videoUrl" name="videoUrl" type="url" placeholder="YouTubeのURLを貼り付け" autocomplete="url" spellcheck="false">
+          <button class="clear-button" id="clearButton" type="button" aria-label="入力をクリア" hidden>×</button>
+        </div>
+        <p class="input-message" id="inputMessage" role="status"></p>
+
+        <div class="options-row">
+          <label class="select-field">
+            <span>形式</span>
+            <select id="format" name="format">
+              <option value="video">動画 / MP4</option>
+              <option value="audio">音声 / M4A</option>
+            </select>
+          </label>
+          <label class="select-field" id="qualityField">
+            <span>画質</span>
+            <select id="quality" name="quality">
+              <option value="1080p">1080p</option>
+              <option value="720p">720p</option>
+              <option value="480p">480p</option>
+            </select>
+          </label>
+          <button class="download-button" type="submit">
+            <span>ダウンロード</span>
+            <span class="button-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+      </form>
+
+      <div class="preview" id="preview" hidden>
+        <div class="thumbnail-wrap">
+          <img id="thumbnail" alt="動画サムネイル" src="">
+          <span class="play-badge" aria-hidden="true">▶</span>
+        </div>
+        <div class="video-details">
+          <span class="details-label">VIDEO READY</span>
+          <h2 id="videoTitle">動画を準備しています</h2>
+          <p id="videoId"></p>
+        </div>
+        <button class="remove-button" id="removeButton" type="button" aria-label="動画を削除">×</button>
+      </div>
+
+      <div class="player" id="playerPanel" hidden>
+        <div class="player-heading">
+          <span class="details-label">ON THIS SITE</span>
+          <span id="playerStatus">動画を準備しています</span>
+        </div>
+        <video id="videoPlayer" controls playsinline preload="metadata"></video>
+      </div>
+
+      <div class="notice" id="notice" role="status" aria-live="polite" hidden>
+        <span class="notice-icon" aria-hidden="true">i</span>
+        <p id="noticeText"></p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>個人利用向けのシンプルなツール</span>
+      <span>© 2026 ClipDown</span>
+    </footer>
+  </main>
+</body>
+<script>
+const form=document.querySelector('#downloadForm'), videoUrl=document.querySelector('#videoUrl'), clearButton=document.querySelector('#clearButton'), inputMessage=document.querySelector('#inputMessage'), format=document.querySelector('#format'), qualityField=document.querySelector('#qualityField'), preview=document.querySelector('#preview'), thumbnail=document.querySelector('#thumbnail'), videoTitle=document.querySelector('#videoTitle'), videoId=document.querySelector('#videoId'), removeButton=document.querySelector('#removeButton'), notice=document.querySelector('#notice'), noticeText=document.querySelector('#noticeText'), playerPanel=document.querySelector('#playerPanel'), videoPlayer=document.querySelector('#videoPlayer'), playerStatus=document.querySelector('#playerStatus'), submitButton=form.querySelector('button[type="submit"]');
+const API='/api/download'; let playerObjectUrl='';
+function getVideoId(value) { try { const url=new URL(value.trim()); if(url.hostname==='youtu.be') return url.pathname.slice(1).split('/')[0]; if(url.hostname.endsWith('youtube.com')) { if(url.pathname==='/watch') return url.searchParams.get('v'); if(url.pathname.startsWith('/shorts/')) return url.pathname.split('/')[2]; if(url.pathname.startsWith('/embed/')) return url.pathname.split('/')[2]; } } catch {} return null; }
+function message(text='') { inputMessage.textContent=text; videoUrl.setAttribute('aria-invalid',text?'true':'false'); }
+function noticeTextSet(text) { notice.hidden=false; noticeText.textContent=text; }
+function clearPlayer() { if(playerObjectUrl) URL.revokeObjectURL(playerObjectUrl); playerObjectUrl=''; videoPlayer.removeAttribute('src'); videoPlayer.load(); playerPanel.hidden=true; }
+function loading(value) { submitButton.disabled=value; submitButton.querySelector('span').textContent=value?'処理中...':'ダウンロード'; }
+async function downloadVideo(id) { const response=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:videoUrl.value.trim(),quality:document.querySelector('#quality').value,format:format.value})}); if(!response.ok) throw new Error((await response.json()).error||'動画を取得できませんでした。'); const blob=await response.blob(); playerObjectUrl=URL.createObjectURL(blob); videoPlayer.src=playerObjectUrl; videoPlayer.load(); playerStatus.textContent='このサイト内で視聴できます'; playerPanel.hidden=false; const link=document.createElement('a'); link.href=playerObjectUrl; link.download=`${id}.${format.value==='audio'?'m4a':'mp4'}`; link.click(); }
+videoUrl.addEventListener('input',()=>{ clearButton.hidden=!videoUrl.value; message(); notice.hidden=true; const id=getVideoId(videoUrl.value); if(id) { thumbnail.src=`https://i.ytimg.com/vi/${id}/hqdefault.jpg`; videoTitle.textContent='YouTube動画を読み込みました'; videoId.textContent=`動画ID: ${id}`; preview.hidden=false; } });
+clearButton.addEventListener('click',()=>{ videoUrl.value=''; clearButton.hidden=true; preview.hidden=true; clearPlayer(); message(); notice.hidden=true; videoUrl.focus(); }); removeButton.addEventListener('click',()=>clearButton.click()); format.addEventListener('change',()=>qualityField.hidden=format.value==='audio');
+form.addEventListener('submit',event=>{ event.preventDefault(); const id=getVideoId(videoUrl.value); if(!id) { message('有効なYouTube URLを入力してください。'); videoUrl.focus(); return; } message(); notice.hidden=true; loading(true); downloadVideo(id).then(()=>noticeTextSet('ダウンロードを開始しました。')).catch(error=>noticeTextSet(`ダウンロードに失敗しました。${error.message}`)).finally(()=>loading(false)); });
+</script>
+</html>
